@@ -1,6 +1,6 @@
 using System;
 
-namespace OpenCodeFoundation.eSchool.Identity.API.Models
+namespace OpenCodeFoundation.ESchool.Web.WebStatus.Models
 {
     public class ErrorViewModel
     {

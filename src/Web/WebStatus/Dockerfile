@@ -22,7 +22,7 @@ COPY "docker-compose.dcproj" "docker-compose.dcproj"
 RUN dotnet restore eSchool.sln -nowarn:msb3202,nu1503
 
 COPY . .
-WORKDIR /src/src/Services/Enrolling/Enrolling.API
+WORKDIR /src/src/Web/WebStatus
 RUN dotnet build --no-restore -c Release -o /app
 
 FROM build AS publish
@@ -31,4 +31,4 @@ RUN dotnet publish --no-restore -c Release -o /app
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app .
-ENTRYPOINT ["dotnet", "Enrolling.API.dll"]
+ENTRYPOINT ["dotnet", "WebStatus.dll"]

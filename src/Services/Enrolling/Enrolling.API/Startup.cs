@@ -1,13 +1,18 @@
 using System;
 using System.Reflection;
+using FluentValidation.AspNetCore;
+using HealthChecks.UI.Client;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using OpenCodeFoundation.ESchool.Services.Enrolling.API.Application.Validations;
+using OpenCodeFoundation.ESchool.Services.Enrolling.API.Extensions;
 using OpenCodeFoundation.ESchool.Services.Enrolling.Infrastructure;
 
 namespace OpenCodeFoundation.ESchool.Services.Enrolling.API
@@ -29,7 +34,7 @@ namespace OpenCodeFoundation.ESchool.Services.Enrolling.API
             services.AddDbContext<EnrollingContext>(options =>
                 {
                     options.UseSqlServer(
-                        Configuration.GetConnectionString("EnrollingDatabase"),
+                        Configuration["ConnectionStrings"],
                         sqlServerOptionsAction: sqlOptions =>
                             {
                                 sqlOptions.MigrationsAssembly(typeof(Startup).GetTypeInfo().Assembly.GetName().Name);
@@ -37,7 +42,11 @@ namespace OpenCodeFoundation.ESchool.Services.Enrolling.API
                             });
                 });
 
-            services.AddControllers();
+            services.AddControllers()
+                .AddFluentValidation(fv =>
+                    fv.RegisterValidatorsFromAssemblyContaining<EnrollmentApplicationCommandValidator>());
+
+            services.AddCustomHealthChecks(Configuration);
 
             services.AddSwaggerGen(c =>
             {
@@ -53,8 +62,6 @@ namespace OpenCodeFoundation.ESchool.Services.Enrolling.API
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseHttpsRedirection();
-
             app.UseRouting();
 
             app.UseAuthorization();
@@ -62,6 +69,16 @@ namespace OpenCodeFoundation.ESchool.Services.Enrolling.API
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+
+                endpoints.MapHealthChecks("/hc", new HealthCheckOptions()
+                {
+                    Predicate = _ => true,
+                    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
+                });
+                endpoints.MapHealthChecks("/liveness", new HealthCheckOptions()
+                {
+                    Predicate = r => r.Name.Contains("self"),
+                });
             });
 
             app.UseSwagger()

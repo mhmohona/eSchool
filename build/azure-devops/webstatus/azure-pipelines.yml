@@ -4,16 +4,16 @@ pool:
 trigger:
   paths:
     include:
-    - src/Services/Identity/*
+    - src/Web/WebStatus/*
     - build/azure-devops/*
 pr:
   paths:
     include:
-    - src/Services/Enrolling/*
+    - src/Web/WebStatus/*
     - build/azure-devops/*
 steps:
 - task: DockerCompose@0
-  displayName: Compose build identity
+  displayName: Compose build webstatus
   inputs:
-    dockerComposeCommand: 'build identity.api'
+    dockerComposeCommand: 'build webstatus'
     dockerComposeFile: docker-compose.yml
